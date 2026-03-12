@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows – MyWiki</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f0f7ff;--bg2:#ffffff;--bg3:#e4f1fb;--border:#c2ddf2;--border2:#9dcaeb;--accent:#1776b8;--accent2:#0d9e5c;--accent3:#d9502a;--accent4:#6b4fbb;--text:#18262f;--text-muted:#456070;--text-dim:#85a8bf;--sidebar-bg:#163d56;--sidebar-hover:#1e5070;--sidebar-border:#1e4a66;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.75;}
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{width:240px;flex-shrink:0;background:var(--sidebar-bg);position:sticky;top:0;height:100vh;overflow-y:auto;box-shadow:2px 0 10px rgba(0,0,0,.15);}
+    .sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid var(--sidebar-border);}
+    .sidebar-logo a{font-family:'Space Grotesk',sans-serif;font-size:19px;color:#fff;text-decoration:none;font-weight:700;}
+    .sidebar-logo a span{color:#5cc8f8;}
+    .sidebar-home{display:flex;align-items:center;gap:8px;padding:10px 20px;text-decoration:none;color:rgba(200,228,248,.8);font-size:13px;border-bottom:1px solid var(--sidebar-border);transition:background .15s,color .15s;}
+    .sidebar-home:hover{background:var(--sidebar-hover);color:#fff;}
+    .acc-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:9px 20px;cursor:pointer;color:rgba(200,228,248,.7);font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;transition:background .15s,color .15s;}
+    .acc-toggle:hover,.acc-toggle.open{background:var(--sidebar-hover);color:#fff;}
+    .acc-arrow{font-size:9px;transition:transform .2s;display:inline-block;opacity:.6;}
+    .acc-toggle.open .acc-arrow{transform:rotate(90deg);}
+    .acc-body{display:none;}.acc-body.open{display:block;background:rgba(0,0,0,.18);}
+    .acc-body a{display:flex;align-items:center;gap:8px;padding:6px 20px 6px 30px;text-decoration:none;color:rgba(200,228,248,.7);font-size:12.5px;transition:background .15s,color .15s;}
+    .acc-body a:hover,.acc-body a.active{background:rgba(92,200,248,.15);color:#fff;}
+    .acc-body a.active{color:#5cc8f8;font-weight:600;}
+    .acc-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(200,228,248,.35);min-width:22px;}
+    .acc-coming{font-size:11px;color:rgba(200,228,248,.28);font-family:'JetBrains Mono',monospace;padding:6px 20px 6px 30px;font-style:italic;}
+    main{flex:1;padding:42px 52px;background:var(--bg);}
+    .breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:24px;}
+    .breadcrumb a{color:var(--accent);text-decoration:none;}
+    /* Windows テーマ：青緑グラデーション */
+    .hero{padding:38px 42px;background:linear-gradient(135deg,#1060a8 0%,#00a4ef 60%,#0abfdc 100%);border-radius:16px;color:#fff;margin-bottom:42px;box-shadow:0 6px 24px rgba(16,96,168,.28);}
+    .hero-label{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;margin-bottom:8px;}
+    .hero h1{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:#fff;margin-bottom:8px;}
+    .hero p{font-size:14px;opacity:.85;max-width:500px;margin:0;}
+    .plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-bottom:40px;}
+    .plan-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px 20px;box-shadow:0 2px 8px rgba(0,0,0,.07);position:relative;overflow:hidden;}
+    .plan-card::after{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#1060a8,#00a4ef);}
+    .plan-card.soon::after{background:linear-gradient(90deg,#bbb,#ddd);}
+    .plan-icon{font-size:26px;margin-bottom:10px;}
+    .plan-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+    .plan-desc{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;}
+    .badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 10px;border-radius:20px;border:1px solid;}
+    .badge-soon{border-color:#ccc;color:#999;background:#f5f5f5;}
+    .badge-plan{border-color:rgba(23,118,184,.4);color:var(--accent);background:rgba(23,118,184,.07);}
+    .roadmap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:26px 30px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+    .roadmap h2{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--text);margin-bottom:20px;padding:9px 14px 9px 16px;background:var(--bg3);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;}
+    .rm-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);}
+    .rm-item:last-child{border-bottom:none;padding-bottom:0;}
+    .rm-dot{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:2px;}
+    .rm-dot.soon{background:#f0f4f8;border:2px dashed #bbb;}
+    .rm-dot.plan{background:rgba(23,118,184,.1);border:2px dashed var(--accent);}
+    .rm-body h4{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+    .rm-body p{font-size:13px;color:var(--text-muted);margin:0;}
+    .rm-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);margin-left:8px;font-weight:400;}
+    .page-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:20px;border-top:2px solid var(--border);}
+    .page-nav a{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);text-decoration:none;padding:6px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;transition:background .15s;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .page-nav a:hover{background:var(--bg3);}
+    main{animation:fadeIn .3s both;}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><a href="index.html">My<span>Wiki</span></a></div>
+    <a href="index.html" class="sidebar-home">🏠 Home</a>
+    <div class="acc-item">
+      <button class="acc-toggle">🐧 AlmaLinux <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="01_almalinux.html"><span class="acc-num">01</span>AlmaLinux 9 Setup</a>
+        <a href="02_ntp.html"><span class="acc-num">02</span>NTP</a>
+        <a href="03_syslog.html"><span class="acc-num">03</span>SYSLOG</a>
+        <a href="04_snmp.html"><span class="acc-num">04</span>SNMP</a>
+        <a href="05_dhcp.html"><span class="acc-num">05</span>DHCP</a>
+        <a href="06_radius.html"><span class="acc-num">06</span>Radius</a>
+        <a href="07_ftp_tftp.html"><span class="acc-num">07</span>FTP &amp; TFTP</a>
+        <a href="08_ansible.html"><span class="acc-num">08</span>Ansible</a>
+        <a href="09_linux_commands.html"><span class="acc-num">09</span>Linux Commands</a>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">🌐 Network <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="network_index.html"><span class="acc-num">→</span>Network TOP</a>
+        <div class="acc-coming">// Cisco IOS — soon</div>
+        <div class="acc-coming">// Catalyst — soon</div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">🪟 Windows <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="windows_index.html" class="active"><span class="acc-num">→</span>Windows TOP</a>
+        <div class="acc-coming">// Windows Server — soon</div>
+        <div class="acc-coming">// PowerShell — soon</div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">📝 Knowledge Box <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="kb_myinfo.html"><span class="acc-num">📝</span>My Info</a>
+      </div>
+    </div>
+  </nav>
+  <main>
+    <div class="breadcrumb"><a href="index.html">MyWiki</a> / Windows</div>
+    <div class="hero">
+      <div class="hero-label">// Category</div>
+      <h1>🪟 Windows</h1>
+      <p>Windows Server・Active Directory・PowerShell など Windows 環境の構築・運用手順をまとめる予定のカテゴリです。</p>
+    </div>
+
+    <div class="plan-grid">
+      <div class="plan-card soon">
+        <div class="plan-icon">🏢</div>
+        <div class="plan-title">Windows Server 初期設定</div>
+        <div class="plan-desc">ホスト名・IPアドレス・RDP・Windows Update・時刻同期の初期構築手順。</div>
+        <span class="badge badge-soon">coming soon</span>
+      </div>
+      <div class="plan-card soon">
+        <div class="plan-icon">🗂</div>
+        <div class="plan-title">Active Directory (AD DS)</div>
+        <div class="plan-desc">ドメインコントローラー構築・ユーザー管理・グループポリシー設定。</div>
+        <span class="badge badge-soon">coming soon</span>
+      </div>
+      <div class="plan-card soon">
+        <div class="plan-icon">🌐</div>
+        <div class="plan-title">DNS / DHCP (Windows)</div>
+        <div class="plan-desc">Windows Server 上の DNS・DHCP サーバー構築と管理手順。</div>
+        <span class="badge badge-soon">coming soon</span>
+      </div>
+      <div class="plan-card soon">
+        <div class="plan-icon">📜</div>
+        <div class="plan-title">PowerShell 運用スクリプト</div>
+        <div class="plan-desc">ユーザー一括作成・ログ収集・サービス監視などの実務スクリプト集。</div>
+        <span class="badge badge-soon">coming soon</span>
+      </div>
+      <div class="plan-card soon">
+        <div class="plan-icon">🔐</div>
+        <div class="plan-title">グループポリシー (GPO)</div>
+        <div class="plan-desc">セキュリティポリシー・ソフトウェア配布・ログイン設定の実践例。</div>
+        <span class="badge badge-soon">coming soon</span>
+      </div>
+      <div class="plan-card">
+        <div class="plan-icon">⚙️</div>
+        <div class="plan-title">Ansible + Windows 自動化</div>
+        <div class="plan-desc">WinRM 経由での設定自動化・08_ansible.html との連携手順。</div>
+        <span class="badge badge-plan">planned</span>
+      </div>
+    </div>
+
+    <div class="roadmap">
+      <h2>📋 ロードマップ</h2>
+      <div class="rm-item">
+        <div class="rm-dot soon">📝</div>
+        <div class="rm-body">
+          <h4>Windows Server 初期設定 <span class="rm-label">// 準備中</span></h4>
+          <p>Server 2022 ベースの初期構築・セキュリティ設定・役割追加手順をまとめる予定。</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot soon">📝</div>
+        <div class="rm-body">
+          <h4>Active Directory 構築 <span class="rm-label">// 準備中</span></h4>
+          <p>新規ドメイン構築・追加 DC・OU 設計・管理者委任の手順。</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot plan">🗺</div>
+        <div class="rm-body">
+          <h4>PowerShell スクリプト集 <span class="rm-label">// 計画中</span></h4>
+          <p>日常運用を効率化するスクリプトをカテゴリ別に整理・公開予定。</p>
+        </div>
+      </div>
+      <div class="rm-item">
+        <div class="rm-dot plan">🗺</div>
+        <div class="rm-body">
+          <h4>Ansible + Windows 自動化 <span class="rm-label">// 計画中</span></h4>
+          <p>WinRM / OpenSSH を使った Ansible による Windows 管理手順を追加予定。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-nav">
+      <a href="network_index.html">← 🌐 Network</a>
+      <a href="index.html">🏠 Home</a>
+    </div>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.acc-toggle').forEach(btn=>{
+  btn.addEventListener('click',()=>{const body=btn.nextElementSibling;const isOpen=btn.classList.contains('open');document.querySelectorAll('.acc-toggle').forEach(b=>{b.classList.remove('open');if(b.nextElementSibling)b.nextElementSibling.classList.remove('open');});if(!isOpen){btn.classList.add('open');body.classList.add('open');}});
+});
+const active=document.querySelector('.acc-body a.active');
+if(active){const body=active.closest('.acc-body');if(body){body.classList.add('open');body.previousElementSibling.classList.add('open');}}
+</script>
+</body></html>

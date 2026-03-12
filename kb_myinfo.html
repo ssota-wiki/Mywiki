@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Info – MyWiki</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f0f7ff;--bg2:#ffffff;--bg3:#e4f1fb;--border:#c2ddf2;--border2:#9dcaeb;--accent:#1776b8;--accent2:#0d9e5c;--accent3:#d9502a;--accent4:#6b4fbb;--text:#18262f;--text-muted:#456070;--text-dim:#85a8bf;--sidebar-bg:#163d56;--sidebar-hover:#1e5070;--sidebar-border:#1e4a66;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.75;}
+    .layout{display:flex;min-height:100vh;}
+    /* Sidebar */
+    .sidebar{width:240px;flex-shrink:0;background:var(--sidebar-bg);position:sticky;top:0;height:100vh;overflow-y:auto;box-shadow:2px 0 10px rgba(0,0,0,.15);}
+    .sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid var(--sidebar-border);}
+    .sidebar-logo a{font-family:'Space Grotesk',sans-serif;font-size:19px;color:#fff;text-decoration:none;font-weight:700;}
+    .sidebar-logo a span{color:#5cc8f8;}
+    .sidebar-home{display:flex;align-items:center;gap:8px;padding:10px 20px;text-decoration:none;color:rgba(200,228,248,.8);font-size:13px;border-bottom:1px solid var(--sidebar-border);transition:background .15s,color .15s;}
+    .sidebar-home:hover{background:var(--sidebar-hover);color:#fff;}
+    .acc-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:9px 20px;cursor:pointer;color:rgba(200,228,248,.7);font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;transition:background .15s,color .15s;}
+    .acc-toggle:hover,.acc-toggle.open{background:var(--sidebar-hover);color:#fff;}
+    .acc-arrow{font-size:9px;transition:transform .2s;display:inline-block;opacity:.6;}
+    .acc-toggle.open .acc-arrow{transform:rotate(90deg);}
+    .acc-body{display:none;}.acc-body.open{display:block;background:rgba(0,0,0,.18);}
+    .acc-body a{display:flex;align-items:center;gap:8px;padding:6px 20px 6px 30px;text-decoration:none;color:rgba(200,228,248,.7);font-size:12.5px;transition:background .15s,color .15s;}
+    .acc-body a:hover,.acc-body a.active{background:rgba(92,200,248,.15);color:#fff;}
+    .acc-body a.active{color:#5cc8f8;font-weight:600;}
+    .acc-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(200,228,248,.35);min-width:22px;}
+    .acc-coming{font-size:11px;color:rgba(200,228,248,.28);font-family:'JetBrains Mono',monospace;padding:6px 20px 6px 30px;font-style:italic;}
+    /* Main */
+    main{flex:1;padding:42px 52px;max-width:960px;background:var(--bg);}
+    .breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:22px;}
+    .breadcrumb a{color:var(--accent);text-decoration:none;}
+    .page-header{margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid var(--border);}
+    h1{font-family:'Space Grotesk',sans-serif;font-size:28px;color:var(--text);font-weight:700;margin-bottom:6px;}
+    .page-desc{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);}
+    h2{font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--text);font-weight:700;margin:32px 0 14px;padding:9px 14px 9px 16px;background:var(--bg3);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;}
+    /* ページについて（赤枠） */
+    .about-box{background:#fff5f5;border:2px solid #e05050;border-radius:10px;padding:14px 18px;margin-bottom:28px;font-size:13px;color:#5a2a2a;}
+    .about-box strong{color:#c03030;}
+    .about-box ul{margin:6px 0 0 18px;}
+    .about-box li{margin-bottom:3px;}
+    /* Save notice — 初期は完全に非表示 */
+    .save-notice{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent2);margin-left:10px;opacity:0;transition:opacity .3s;pointer-events:none;}
+    /* Save btn */
+    .save-btn{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);background:var(--bg2);border:1px solid var(--accent);border-radius:6px;padding:5px 14px;cursor:pointer;transition:background .15s,color .15s;}
+    .save-btn:hover{background:var(--accent);color:#fff;}
+    .add-btn{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2);background:var(--bg2);border:1px solid var(--accent2);border-radius:6px;padding:5px 14px;cursor:pointer;transition:background .15s,color .15s;margin-left:8px;}
+    .add-btn:hover{background:var(--accent2);color:#fff;}
+    /* Web会議カード */
+    .link-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:12px;}
+    .link-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--text);transition:border-color .2s,box-shadow .2s;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .link-card:hover{border-color:var(--accent);box-shadow:0 3px 12px rgba(23,118,184,.15);}
+    .link-icon{font-size:22px;flex-shrink:0;}
+    .link-info{flex:1;min-width:0;}
+    .link-title{display:block;font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px;}
+    .link-url{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    /* URLセクション */
+    .url-list{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .url-row{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);}
+    .url-row:last-child{border-bottom:none;}
+    .url-icon{width:44px;text-align:center;font-size:18px;flex-shrink:0;padding:10px 0;}
+    .url-title-input{flex:0 0 180px;border:none;background:transparent;font-family:'Noto Sans JP',sans-serif;font-size:13px;color:var(--text);font-weight:600;padding:10px 8px;outline:none;border-right:1px solid var(--border);}
+    .url-title-input:focus{background:#f5faff;}
+    .url-href-input{flex:1;border:none;background:transparent;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);padding:10px 12px;outline:none;}
+    .url-href-input:focus{background:#f5faff;}
+    .url-open-btn{flex-shrink:0;margin:6px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#fff;background:var(--accent);border:none;border-radius:5px;padding:4px 12px;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+    .url-open-btn:hover{opacity:.8;}
+    .url-del-btn{flex-shrink:0;margin:6px 4px 6px 0;font-size:14px;color:var(--text-dim);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color .15s;}
+    .url-del-btn:hover{color:var(--accent3);}
+    /* VM テーブル */
+    .vm-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+    .vm-table th{background:var(--accent);color:#fff;padding:8px 12px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;}
+    .vm-table td{padding:7px 10px;border:1px solid var(--border);background:var(--bg2);}
+    .vm-table tr:nth-child(even) td{background:var(--bg3);}
+    .editable{outline:none;cursor:text;}
+    .editable:focus{background:#fffbe6;border-radius:3px;}
+    .pass-cell{cursor:pointer;font-family:'JetBrains Mono',monospace;color:var(--text-dim);user-select:none;}
+    .pass-cell:hover{color:var(--accent);}
+    .pass-cell.show{color:var(--accent3);font-size:12px;}
+    /* チェックリスト */
+    .checklist{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .check-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);}
+    .check-row:last-child{border-bottom:none;}
+    .check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent2);cursor:pointer;flex-shrink:0;}
+    .check-label{flex:1;font-size:13px;color:var(--text);cursor:pointer;}
+    .check-label.done{text-decoration:line-through;color:var(--text-dim);}
+    .check-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;transition:color .15s;}
+    .check-del:hover{color:var(--accent3);}
+    .check-add{display:flex;gap:8px;margin-top:10px;}
+    .check-add input{flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;font-family:'Noto Sans JP',sans-serif;outline:none;background:var(--bg3);}
+    .check-add input:focus{border-color:var(--accent);background:#fff;}
+    .check-add button{font-family:'JetBrains Mono',monospace;font-size:12px;color:#fff;background:var(--accent2);border:none;border-radius:6px;padding:6px 14px;cursor:pointer;}
+    /* メモ */
+    .memo-area{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .memo-area textarea{width:100%;min-height:160px;border:none;padding:14px 16px;font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text);line-height:1.7;resize:vertical;outline:none;background:transparent;}
+    /* スニペット */
+    .snippet-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+    .snippet-item{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+    .snippet-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);}
+    .snippet-title{flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--text);background:transparent;border:none;outline:none;}
+    .snippet-title:focus{background:#fffbe6;border-radius:3px;}
+    .snippet-copy{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);background:none;border:1px solid var(--border);border-radius:4px;padding:2px 8px;cursor:pointer;transition:color .15s,border-color .15s;}
+    .snippet-copy:hover{color:var(--accent);border-color:var(--accent);}
+    .snippet-copy.copied{color:var(--accent2);border-color:var(--accent2);}
+    .snippet-del{font-size:13px;color:var(--text-dim);background:none;border:none;cursor:pointer;padding:2px 6px;transition:color .15s;}
+    .snippet-del:hover{color:var(--accent3);}
+    .snippet-body textarea{width:100%;min-height:70px;border:none;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);line-height:1.6;resize:vertical;outline:none;background:transparent;}
+    /* Page nav */
+    .page-nav{display:flex;justify-content:space-between;margin-top:44px;padding-top:20px;border-top:2px solid var(--border);}
+    .page-nav a{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);text-decoration:none;padding:6px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;transition:background .15s;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .page-nav a:hover{background:var(--bg3);}
+    main{animation:fadeIn .3s both;}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .row-btns{display:flex;gap:8px;margin-top:8px;align-items:center;}
+  
+    /* ===== Zoom リンクボックス ===== */
+    .zoom-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .zoom-label-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+    .zoom-icon{font-size:20px;}
+    .zoom-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+    .zoom-url-row{display:flex;align-items:center;gap:8px;}
+    .zoom-url-field{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);transition:border-color .15s;outline:none;}
+    .zoom-url-field:focus{border-color:var(--accent);}
+    .zoom-open-btn{font-family:'JetBrains Mono',monospace;font-size:12px;color:#fff;background:var(--accent);border:none;border-radius:6px;padding:8px 16px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:opacity .15s;}
+    .zoom-open-btn:hover{opacity:.85;}
+    .zoom-copy-btn{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);background:var(--bg2);border:1px solid var(--accent);border-radius:6px;padding:8px 16px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;}
+    .zoom-copy-btn:hover{background:var(--accent);color:#fff;}
+    .zoom-copy-btn.copied{color:var(--accent2);border-color:var(--accent2);}
+
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><a href="index.html">My<span>Wiki</span></a></div>
+    <a href="index.html" class="sidebar-home">🏠 Home</a>
+    <div class="acc-item">
+      <button class="acc-toggle">🐧 AlmaLinux <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="01_almalinux.html"><span class="acc-num">01</span>AlmaLinux 9 Setup</a>
+        <a href="02_ntp.html"><span class="acc-num">02</span>NTP</a>
+        <a href="03_syslog.html"><span class="acc-num">03</span>SYSLOG</a>
+        <a href="04_snmp.html"><span class="acc-num">04</span>SNMP</a>
+        <a href="05_dhcp.html"><span class="acc-num">05</span>DHCP</a>
+        <a href="06_radius.html"><span class="acc-num">06</span>Radius</a>
+        <a href="07_ftp_tftp.html"><span class="acc-num">07</span>FTP &amp; TFTP</a>
+        <a href="08_ansible.html"><span class="acc-num">08</span>Ansible</a>
+        <a href="09_linux_commands.html"><span class="acc-num">09</span>Linux Commands</a>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">🌐 Network <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="network_index.html"><span class="acc-num">→</span>Network TOP</a>
+        <div class="acc-coming">// Cisco IOS — soon</div>
+        <div class="acc-coming">// Catalyst — soon</div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">🪟 Windows <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="windows_index.html"><span class="acc-num">→</span>Windows TOP</a>
+        <div class="acc-coming">// Windows Server — soon</div>
+        <div class="acc-coming">// PowerShell — soon</div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">📝 Knowledge Box <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="kb_myinfo.html" class="active"><span class="acc-num">📝</span>My Info</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="breadcrumb"><a href="index.html">MyWiki</a> / Knowledge Box / My Info</div>
+    <div class="page-header">
+      <h1>📝 My Info</h1>
+      <div class="page-desc">// 会議リンク・VM情報・よく使うURL・メモ を一か所に</div>
+    </div>
+
+    <!-- 📌 このページについて（赤枠） -->
+    <div class="about-box">
+      <strong>📌 このページについて</strong>
+      <ul>
+        <li>このページの内容は<strong>ブラウザのローカルストレージ</strong>に保存されます。</li>
+        <li>GitHub Pages に公開しても、<strong>他人には見えません</strong>（自分のブラウザだけに保存）。</li>
+        <li>ブラウザのデータをクリアすると内容が消えます。定期的にメモをバックアップしてください。</li>
+      </ul>
+    </div>
+
+    <!-- ===== Web会議リンク ===== -->
+    <h2>🎥 Web 会議リンク</h2>
+    <div class="zoom-box">
+      <div class="zoom-label-row">
+        <span class="zoom-icon">📹</span>
+        <span class="zoom-name">Zoom</span>
+      </div>
+      <div class="zoom-url-row">
+        <input type="text" id="zoom-url-input" class="zoom-url-field"
+          value="https://ctc-g.zoom.us/j/9336523297?pwd=XVj8QFCtRUDDjZttk6uD0BsxkDJsPP.1"
+          oninput="saveZoomUrl()">
+        <a id="zoom-open-btn" href="#" target="_blank" class="zoom-open-btn" onclick="return openZoom()">Open</a>
+        <button id="zoom-copy-btn" class="zoom-copy-btn" onclick="copyZoomUrl()">copy</button>
+      </div>
+    </div>
+
+    <!-- ===== 仮想環境ログイン情報 ===== -->
+    <h2>🖥️ 仮想環境 ログイン情報</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">パスワードセルをクリックすると表示／非表示を切り替えられます。セルを直接クリックして編集できます。</p>
+    <table class="vm-table">
+      <thead><tr><th>環境名</th><th>URL / IP</th><th>ユーザー</th><th>パスワード</th><th>備考</th></tr></thead>
+      <tbody id="vm-tbody">
+        <tr>
+          <td class="editable" contenteditable="true">Windows 11①</td>
+          <td class="editable" contenteditable="true">192.168.99.10</td>
+          <td class="editable" contenteditable="true">newuser01</td>
+          <td class="pass-cell" onclick="togglePass(this)">1029Sota</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">Almalinux 9.6</td>
+          <td class="editable" contenteditable="true">192.168.99.20</td>
+          <td class="editable" contenteditable="true">newuser1/1029Sota</td>
+          <td class="pass-cell" onclick="togglePass(this)">su -/password</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">FortiGate①</td>
+          <td class="editable" contenteditable="true">192.168.99.30</td>
+          <td class="editable" contenteditable="true">admin</td>
+          <td class="pass-cell" onclick="togglePass(this)">password</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">FortiGate①</td>
+          <td class="editable" contenteditable="true">192.168.99.40</td>
+          <td class="editable" contenteditable="true">admin</td>
+          <td class="pass-cell" onclick="togglePass(this)">password</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">Windows 11②</td>
+          <td class="editable" contenteditable="true">192.168.99.50</td>
+          <td class="editable" contenteditable="true"></td>
+          <td class="pass-cell" onclick="togglePass(this)"></td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">Ubuntu</td>
+          <td class="editable" contenteditable="true">192.168.99.60</td>
+          <td class="editable" contenteditable="true">admin</td>
+          <td class="pass-cell" onclick="togglePass(this)">password</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">AlmaLinux 9.7</td>
+          <td class="editable" contenteditable="true">192.168.99.70</td>
+          <td class="editable" contenteditable="true">admin</td>
+          <td class="pass-cell" onclick="togglePass(this)">password</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">vyos</td>
+          <td class="editable" contenteditable="true">192.168.99.100</td>
+          <td class="editable" contenteditable="true">vyos</td>
+          <td class="pass-cell" onclick="togglePass(this)">vyos</td>
+          <td class="editable" contenteditable="true">Hyper-V</td>
+        </tr>
+        <tr>
+          <td class="editable" contenteditable="true">vSphere</td>
+          <td class="editable" contenteditable="true">https://yccvc02.ctcsp.local/</td>
+          <td class="editable" contenteditable="true">2253003-shibata@ctcsp.local</td>
+          <td class="pass-cell" onclick="togglePass(this)">B9Dd?[_Tb-TL</td>
+          <td class="editable" contenteditable="true">YCC</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="row-btns">
+      <button class="save-btn" onclick="saveVmTable()">💾 Save Table</button>
+      <button class="add-btn" onclick="addVmRow()">＋ 行を追加</button>
+      <span class="save-notice" id="vm-notice">✓ Saved!</span>
+    </div>
+
+    <!-- ===== よく使うURL ===== -->
+    <h2>🔗 よく使う URL</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">名前・URLを直接入力して編集できます。「Open」で新しいタブで開きます。</p>
+    <div class="url-list" id="url-list"></div>
+    <div class="row-btns">
+      <button class="save-btn" onclick="saveUrls()">💾 Save URLs</button>
+      <button class="add-btn" onclick="addUrlRow()">＋ 追加</button>
+      <span class="save-notice" id="url-notice">✓ Saved!</span>
+    </div>
+
+    <!-- ===== チェックリスト ===== -->
+    <h2>✅ 作業チェックリスト</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">よく行う作業手順やTODOをチェックリストで管理できます。</p>
+    <div class="checklist" id="checklist"></div>
+    <div class="row-btns" style="margin-top:0;">
+      <button class="save-btn" onclick="saveChecklist()">💾 Save</button>
+      <span class="save-notice" id="check-notice">✓ Saved!</span>
+    </div>
+
+    <!-- ===== コマンドスニペット ===== -->
+    <h2>⚡ よく使うコマンド・スニペット</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">タイトルを編集してコマンドを保存。コピーボタンですぐに貼り付け可能。</p>
+    <div class="snippet-list" id="snippet-list"></div>
+    <div class="row-btns">
+      <button class="save-btn" onclick="saveSnippets()">💾 Save</button>
+      <button class="add-btn" onclick="addSnippet()">＋ 追加</button>
+      <span class="save-notice" id="snippet-notice">✓ Saved!</span>
+    </div>
+
+    <!-- ===== フリーメモ ===== -->
+    <h2>📋 フリーメモ</h2>
+    <div class="memo-area">
+      <textarea id="free-memo" placeholder="自由にメモを入力できます&#10;例: 定例会議は毎週月曜10:00 / VPN接続してから作業すること / など"></textarea>
+    </div>
+    <div class="row-btns">
+      <button class="save-btn" onclick="saveMemo()">💾 Save Memo</button>
+      <span class="save-notice" id="memo-notice">✓ Saved!</span>
+    </div>
+
+    <div class="page-nav">
+      <a href="09_linux_commands.html">← 09. Linux Commands</a>
+      <a href="index.html">🏠 Home</a>
+    </div>
+  </main>
+</div>
+
+<script>
+// ============ ユーティリティ ============
+function flash(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.opacity='1';
+  setTimeout(()=>{el.style.opacity='0';},2000);
+}
+function ls_get(k,def){
+  try{const v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){return def;}
+}
+function ls_set(k,v){
+  try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+}
+
+// ============ Accordion ============
+document.querySelectorAll('.acc-toggle').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const body=btn.nextElementSibling;
+    const isOpen=btn.classList.contains('open');
+    document.querySelectorAll('.acc-toggle').forEach(b=>{
+      b.classList.remove('open');
+      if(b.nextElementSibling) b.nextElementSibling.classList.remove('open');
+    });
+    if(!isOpen){btn.classList.add('open');body.classList.add('open');}
+  });
+});
+const activeLink=document.querySelector('.acc-body a.active');
+if(activeLink){
+  const body=activeLink.closest('.acc-body');
+  if(body){body.classList.add('open');body.previousElementSibling.classList.add('open');}
+}
+
+// ============ Web会議リンク ============
+// ============ Zoom リンク ============
+function saveZoomUrl(){
+  const url=document.getElementById('zoom-url-input').value;
+  ls_set('kb_zoom_url', url);
+  const openBtn=document.getElementById('zoom-open-btn');
+  openBtn.href=url.startsWith('http')?url:'#';
+}
+
+function openZoom(){
+  const url=document.getElementById('zoom-url-input').value;
+  if(url.startsWith('http')){window.open(url,'_blank');}
+  return false;
+}
+
+function copyZoomUrl(){
+  const url=document.getElementById('zoom-url-input').value;
+  if(!url){return;}
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.getElementById('zoom-copy-btn');
+    btn.textContent='copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='copy';btn.classList.remove('copied');},1500);
+  });
+}
+
+function loadZoomUrl(){
+  const DEFAULT='https://ctc-g.zoom.us/j/9336523297?pwd=XVj8QFCtRUDDjZttk6uD0BsxkDJsPP.1';
+  const url=ls_get('kb_zoom_url',DEFAULT);
+  document.getElementById('zoom-url-input').value=url;
+  document.getElementById('zoom-open-btn').href=url.startsWith('http')?url:'#';
+}
+
+// ============ VMテーブル ============
+const PASS_DATA={};
+
+function togglePass(td){
+  const key=td.cellIndex+'_'+td.closest('tr').rowIndex;
+  if(td.classList.contains('show')){
+    td.textContent='••••••••';td.classList.remove('show');
+  } else {
+    const stored=PASS_DATA[key]||'';
+    td.textContent=stored||'（クリックして入力）';
+    td.classList.add('show');
+    td.contentEditable='true';
+    td.focus();
+    td.onblur=()=>{
+      PASS_DATA[key]=td.textContent;
+      td.textContent='••••••••';
+      td.classList.remove('show');
+      td.contentEditable='false';
+    };
+  }
+}
+
+function addVmRow(){
+  const tbody=document.getElementById('vm-tbody');
+  const tr=document.createElement('tr');
+  const key=Date.now();
+  tr.innerHTML=`
+    <td class="editable" contenteditable="true">新しい環境</td>
+    <td class="editable" contenteditable="true">192.168.x.x</td>
+    <td class="editable" contenteditable="true">admin</td>
+    <td class="pass-cell" onclick="togglePass(this)">••••••••</td>
+    <td class="editable" contenteditable="true">備考</td>`;
+  tbody.appendChild(tr);
+}
+
+function saveVmTable(){
+  const rows=[];
+  document.querySelectorAll('#vm-tbody tr').forEach(tr=>{
+    const cells=tr.querySelectorAll('td');
+    const key=cells[3].cellIndex+'_'+tr.rowIndex;
+    rows.push({
+      name:cells[0].textContent,
+      addr:cells[1].textContent,
+      user:cells[2].textContent,
+      pass:PASS_DATA[key]||'',
+      note:cells[4].textContent
+    });
+  });
+  ls_set('kb_vm',rows);
+  flash('vm-notice');
+}
+
+function loadVmTable(){
+  const rows=ls_get('kb_vm',null);
+  if(!rows||!rows.length)return;
+  const tbody=document.getElementById('vm-tbody');
+  tbody.innerHTML='';
+  rows.forEach((r,ri)=>{
+    const key=`3_${ri+1}`;
+    PASS_DATA[key]=r.pass;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="editable" contenteditable="true">${r.name}</td>
+      <td class="editable" contenteditable="true">${r.addr}</td>
+      <td class="editable" contenteditable="true">${r.user}</td>
+      <td class="pass-cell" onclick="togglePass(this)">••••••••</td>
+      <td class="editable" contenteditable="true">${r.note}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============ よく使うURL ============
+const DEFAULT_URLS=[
+  {icon:'📊',title:'監視ダッシュボード',url:'http://grafana.local:3000'},
+  {icon:'📁',title:'ファイルサーバー',url:'\\\\fileserver\\share'},
+  {icon:'🎫',title:'チケット管理',url:'https://jira.company.com'},
+  {icon:'📖',title:'社内Wiki',url:'https://confluence.company.com'},
+];
+
+function renderUrls(data){
+  const list=document.getElementById('url-list');
+  list.innerHTML='';
+  data.forEach((item,i)=>{
+    const row=document.createElement('div');
+    row.className='url-row';
+    row.innerHTML=`
+      <div class="url-icon">${item.icon||'🔗'}</div>
+      <input class="url-title-input" value="${item.title||''}" placeholder="名前" oninput="urlChanged()">
+      <input class="url-href-input" value="${item.url||''}" placeholder="https://..." oninput="urlChanged()">
+      <button class="url-open-btn" onclick="openUrl(${i})">Open</button>
+      <button class="url-del-btn" onclick="delUrl(${i})" title="削除">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+function urlChanged(){/* 自動保存なし：Saveボタンで保存 */}
+
+function openUrl(i){
+  const rows=document.querySelectorAll('.url-row');
+  const url=rows[i].querySelector('.url-href-input').value;
+  if(url&&url.startsWith('http'))window.open(url,'_blank');
+}
+
+function delUrl(i){
+  const data=getUrlData();
+  data.splice(i,1);
+  renderUrls(data);
+}
+
+function addUrlRow(){
+  const data=getUrlData();
+  data.push({icon:'🔗',title:'新しいURL',url:'https://'});
+  renderUrls(data);
+}
+
+function getUrlData(){
+  const rows=document.querySelectorAll('.url-row');
+  return Array.from(rows).map(row=>({
+    icon:row.querySelector('.url-icon').textContent,
+    title:row.querySelector('.url-title-input').value,
+    url:row.querySelector('.url-href-input').value
+  }));
+}
+
+function saveUrls(){
+  ls_set('kb_urls',getUrlData());
+  flash('url-notice');
+}
+
+function loadUrls(){
+  const data=ls_get('kb_urls',DEFAULT_URLS);
+  renderUrls(data);
+}
+
+// ============ チェックリスト ============
+const DEFAULT_CHECKS=[
+  {text:'作業前にVPN接続を確認',done:false},
+  {text:'変更前にバックアップを取得',done:false},
+  {text:'作業後にサービスの死活確認',done:false},
+  {text:'作業ログをWikiに記録',done:false},
+];
+
+function renderChecklist(data){
+  const box=document.getElementById('checklist');
+  box.innerHTML='';
+  data.forEach((item,i)=>{
+    const row=document.createElement('div');
+    row.className='check-row';
+    const cb=document.createElement('input');
+    cb.type='checkbox';cb.checked=item.done;
+    cb.onchange=()=>{
+      lbl.classList.toggle('done',cb.checked);
+    };
+    const lbl=document.createElement('span');
+    lbl.className='check-label'+(item.done?' done':'');
+    lbl.contentEditable='true';
+    lbl.textContent=item.text;
+    const del=document.createElement('button');
+    del.className='check-del';del.textContent='✕';
+    del.onclick=()=>{row.remove();};
+    row.appendChild(cb);row.appendChild(lbl);row.appendChild(del);
+    box.appendChild(row);
+  });
+  // 追加フォーム
+  const addRow=document.createElement('div');
+  addRow.className='check-add';
+  addRow.innerHTML=`<input type="text" id="check-new-input" placeholder="新しい項目を入力..."><button onclick="addCheckItem()">追加</button>`;
+  box.appendChild(addRow);
+}
+
+function addCheckItem(){
+  const inp=document.getElementById('check-new-input');
+  if(!inp.value.trim())return;
+  const data=getChecklistData();
+  data.push({text:inp.value.trim(),done:false});
+  renderChecklist(data);
+  saveChecklist();
+}
+
+function getChecklistData(){
+  const rows=document.querySelectorAll('#checklist .check-row');
+  return Array.from(rows).map(row=>({
+    text:row.querySelector('.check-label').textContent,
+    done:row.querySelector('input[type=checkbox]').checked
+  }));
+}
+
+function saveChecklist(){
+  ls_set('kb_checks',getChecklistData());
+  flash('check-notice');
+}
+
+function loadChecklist(){
+  renderChecklist(ls_get('kb_checks',DEFAULT_CHECKS));
+}
+
+// ============ スニペット ============
+const DEFAULT_SNIPPETS=[
+  {title:'SSH接続',body:'ssh user@192.168.x.x'},
+  {title:'サービス確認',body:'systemctl status SERVICE --no-pager'},
+  {title:'ログ確認',body:'journalctl -u SERVICE -f'},
+];
+
+function renderSnippets(data){
+  const list=document.getElementById('snippet-list');
+  list.innerHTML='';
+  data.forEach((item,i)=>{
+    const el=document.createElement('div');
+    el.className='snippet-item';
+    el.innerHTML=`
+      <div class="snippet-header">
+        <input class="snippet-title" value="${item.title||''}" placeholder="タイトル">
+        <button class="snippet-copy" onclick="copySnippet(this,${i})">copy</button>
+        <button class="snippet-del" onclick="delSnippet(${i})" title="削除">✕</button>
+      </div>
+      <div class="snippet-body">
+        <textarea placeholder="コマンドやスニペットを入力...">${item.body||''}</textarea>
+      </div>`;
+    list.appendChild(el);
+  });
+}
+
+function copySnippet(btn,i){
+  const items=document.querySelectorAll('.snippet-item');
+  const text=items[i].querySelector('textarea').value;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='copied!';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='copy';btn.classList.remove('copied');},1500);
+  });
+}
+
+function delSnippet(i){
+  const data=getSnippetData();
+  data.splice(i,1);
+  renderSnippets(data);
+}
+
+function addSnippet(){
+  const data=getSnippetData();
+  data.push({title:'新しいスニペット',body:''});
+  renderSnippets(data);
+}
+
+function getSnippetData(){
+  const items=document.querySelectorAll('.snippet-item');
+  return Array.from(items).map(el=>({
+    title:el.querySelector('.snippet-title').value,
+    body:el.querySelector('textarea').value
+  }));
+}
+
+function saveSnippets(){
+  ls_set('kb_snippets',getSnippetData());
+  flash('snippet-notice');
+}
+
+function loadSnippets(){
+  renderSnippets(ls_get('kb_snippets',DEFAULT_SNIPPETS));
+}
+
+// ============ フリーメモ ============
+function saveMemo(){
+  ls_set('kb_memo',document.getElementById('free-memo').value);
+  flash('memo-notice');
+}
+
+function loadMemo(){
+  const m=ls_get('kb_memo','');
+  document.getElementById('free-memo').value=m;
+}
+
+// ============ 初期化 ============
+loadZoomUrl();
+loadVmTable();
+loadUrls();
+loadChecklist();
+loadSnippets();
+loadMemo();
+</script>
+</body></html>

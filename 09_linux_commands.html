@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linux Commands – MyWiki</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f0f7ff;--bg2:#ffffff;--bg3:#e4f1fb;--border:#c2ddf2;--border2:#9dcaeb;--accent:#1776b8;--accent2:#0d9e5c;--accent3:#d9502a;--accent4:#6b4fbb;--text:#18262f;--text-muted:#456070;--text-dim:#85a8bf;--sidebar-bg:#163d56;--sidebar-hover:#1e5070;--sidebar-border:#1e4a66;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.75;}
+    .layout{display:flex;min-height:100vh;}
+    /* Sidebar */
+    .sidebar{width:240px;flex-shrink:0;background:var(--sidebar-bg);position:sticky;top:0;height:100vh;overflow-y:auto;box-shadow:2px 0 10px rgba(0,0,0,.15);}
+    .sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid var(--sidebar-border);}
+    .sidebar-logo a{font-family:'Space Grotesk',sans-serif;font-size:19px;color:#fff;text-decoration:none;font-weight:700;}
+    .sidebar-logo a span{color:#5cc8f8;}
+    .sidebar-home{display:flex;align-items:center;gap:8px;padding:10px 20px;text-decoration:none;color:rgba(200,228,248,.8);font-size:13px;border-bottom:1px solid var(--sidebar-border);transition:background .15s,color .15s;}
+    .sidebar-home:hover{background:var(--sidebar-hover);color:#fff;}
+    .acc-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:9px 20px;cursor:pointer;color:rgba(200,228,248,.7);font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;transition:background .15s,color .15s;}
+    .acc-toggle:hover,.acc-toggle.open{background:var(--sidebar-hover);color:#fff;}
+    .acc-arrow{font-size:9px;transition:transform .2s;display:inline-block;opacity:.6;}
+    .acc-toggle.open .acc-arrow{transform:rotate(90deg);}
+    .acc-body{display:none;}.acc-body.open{display:block;background:rgba(0,0,0,.18);}
+    .acc-body a{display:flex;align-items:center;gap:8px;padding:6px 20px 6px 30px;text-decoration:none;color:rgba(200,228,248,.7);font-size:12.5px;transition:background .15s,color .15s;}
+    .acc-body a:hover,.acc-body a.active{background:rgba(92,200,248,.15);color:#fff;}
+    .acc-body a.active{color:#5cc8f8;font-weight:600;}
+    .acc-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(200,228,248,.35);min-width:22px;}
+    .acc-coming{font-size:11px;color:rgba(200,228,248,.28);font-family:'JetBrains Mono',monospace;padding:6px 20px 6px 30px;font-style:italic;}
+    /* Main */
+    main{flex:1;padding:42px 52px;max-width:1000px;background:var(--bg);}
+    .breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:22px;}
+    .breadcrumb a{color:var(--accent);text-decoration:none;}
+    .page-header{margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid var(--border);}
+    .page-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-bottom:5px;}
+    h1{font-family:'Space Grotesk',sans-serif;font-size:28px;color:var(--text);font-weight:700;margin-bottom:6px;}
+    .page-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);}
+    /* TOC */
+    .toc{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:28px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    .toc-title{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+    .toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:4px 0;}
+    .toc-grid a{color:var(--accent);text-decoration:none;font-size:13px;padding:2px 0;display:block;}
+    .toc-grid a:hover{text-decoration:underline;}
+    /* Section heading */
+    h2{font-family:'Space Grotesk',sans-serif;font-size:16px;color:var(--text);font-weight:700;margin:32px 0 14px;padding:9px 14px 9px 16px;background:var(--bg3);border-left:4px solid var(--accent);border-radius:0 6px 6px 0;}
+    /* Command table layout */
+    .cmd-section{margin-bottom:6px;}
+    .cmd-table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:13px;box-shadow:0 1px 6px rgba(0,0,0,.07);}
+    .cmd-table th{background:var(--accent);color:#fff;padding:8px 14px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.04em;}
+    .cmd-table th:nth-child(1){width:34%;}
+    .cmd-table th:nth-child(2){width:26%;}
+    .cmd-table th:nth-child(3){width:40%;}
+    .cmd-table td{padding:0;border:1px solid var(--border);vertical-align:top;}
+    .cmd-table tr:nth-child(even) td{background:var(--bg3);}
+    .cmd-table tr:nth-child(odd) td{background:var(--bg2);}
+    .cmd-table td:nth-child(2){color:var(--text-muted);font-size:12.5px;padding:8px 14px;}
+    .cmd-table td:nth-child(3){color:var(--text-muted);font-size:12.5px;padding:8px 14px;line-height:1.55;}
+    /* コマンドセルにコードブロック風 */
+    .cmd-cell{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;padding:8px 10px;}
+    .cmd-code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#1b4a6b;background:#ddeeff;border:1px solid #b0d4f0;border-radius:5px;padding:5px 9px;flex:1;white-space:pre;overflow-x:auto;line-height:1.5;}
+    .cmd-copy{flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;transition:color .15s,border-color .15s;align-self:flex-start;margin-top:1px;}
+    .cmd-copy:hover{color:var(--accent);border-color:var(--accent);}
+    .cmd-copy.copied{color:var(--accent2);border-color:var(--accent2);}
+    .cm{color:#5a7a8a;}
+    /* 特集カード（nmtui など） */
+    .feature-card{background:var(--bg2);border:2px solid var(--accent);border-radius:12px;padding:22px 24px;margin-bottom:24px;box-shadow:0 2px 10px rgba(23,118,184,.12);}
+    .feature-card h3{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+    .feature-card p{font-size:13px;color:var(--text-muted);margin-bottom:12px;}
+    .feature-card .fc-tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);background:rgba(23,118,184,.1);border:1px solid rgba(23,118,184,.3);border-radius:20px;padding:1px 9px;margin-bottom:12px;}
+    /* ページナビ */
+    .page-nav{display:flex;justify-content:space-between;margin-top:44px;padding-top:20px;border-top:2px solid var(--border);}
+    .page-nav a{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);text-decoration:none;padding:6px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;transition:background .15s;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+    .page-nav a:hover{background:var(--bg3);}
+    main{animation:fadeIn .3s both;}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo"><a href="index.html">My<span>Wiki</span></a></div>
+    <a href="index.html" class="sidebar-home">🏠 Home</a>
+    <div class="acc-item">
+      <button class="acc-toggle">🐧 AlmaLinux <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="01_almalinux.html"><span class="acc-num">01</span>AlmaLinux 9 Setup</a>
+        <a href="02_ntp.html"><span class="acc-num">02</span>NTP</a>
+        <a href="03_syslog.html"><span class="acc-num">03</span>SYSLOG</a>
+        <a href="04_snmp.html"><span class="acc-num">04</span>SNMP</a>
+        <a href="05_dhcp.html"><span class="acc-num">05</span>DHCP</a>
+        <a href="06_radius.html"><span class="acc-num">06</span>Radius</a>
+        <a href="07_ftp_tftp.html"><span class="acc-num">07</span>FTP &amp; TFTP</a>
+        <a href="08_ansible.html"><span class="acc-num">08</span>Ansible</a>
+        <a href="09_linux_commands.html" class="active"><span class="acc-num">09</span>Linux Commands</a>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">🌐 Network <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="network_index.html"><span class="acc-num">→</span>Network TOP</a>
+        <div class="acc-coming">// Cisco IOS — soon</div>
+        <div class="acc-coming">// Catalyst — soon</div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">🪟 Windows <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="windows_index.html"><span class="acc-num">→</span>Windows TOP</a>
+        <div class="acc-coming">// Windows Server — soon</div>
+        <div class="acc-coming">// PowerShell — soon</div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-toggle">📝 Knowledge Box <span class="acc-arrow">▶</span></button>
+      <div class="acc-body">
+        <a href="kb_myinfo.html"><span class="acc-num">📝</span>My Info</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="breadcrumb"><a href="index.html">MyWiki</a> / AlmaLinux / 09. Linux Commands</div>
+    <div class="page-header">
+      <div class="page-num">Document 09</div>
+      <h1>Linux Commands</h1>
+      <div class="page-meta">現場で使える厳選コマンド集</div>
+    </div>
+
+    <div class="toc">
+      <div class="toc-title">// Categories</div>
+      <div class="toc-grid">
+        <a href="#nmtui">🖥 nmtui（擬似GUI）</a>
+        <a href="#system">🔍 System Info</a>
+        <a href="#process">⚙️ Process</a>
+        <a href="#network">🌐 Network</a>
+        <a href="#disk">💾 Disk</a>
+        <a href="#log">📋 Log / Search</a>
+        <a href="#service">🔧 Service</a>
+        <a href="#file">📁 File Ops</a>
+        <a href="#user">👤 User / Permission</a>
+        <a href="#performance">📈 Performance</a>
+        <a href="#tips">💡 Tips</a>
+      </div>
+    </div>
+
+    <!-- ===== nmtui 特集 ===== -->
+    <h2 id="nmtui">🖥 nmtui — ネットワーク設定（擬似GUIツール）</h2>
+
+    <div class="feature-card">
+      <div class="fc-tag">// CUI 上で動く擬似 GUI</div>
+      <h3>nmtui とは？</h3>
+      <p>
+        <code>nmtui</code>（Network Manager Text User Interface）は、ターミナル上でマウス感覚で操作できる<strong>擬似 GUI ツール</strong>です。
+        コマンドを暗記しなくても、<strong>矢印キー・Tab キー・Enter キー</strong>だけで IP アドレスや DNS の設定・変更ができます。
+        SSH 接続先で IP を変えたいとき、設定ファイルを直接編集せずに済むので非常に便利です。
+      </p>
+      <table class="cmd-table">
+        <thead><tr><th>起動コマンド</th><th>説明</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td><div class="cmd-cell"><code class="cmd-code">nmtui</code><button class="cmd-copy">copy</button></div></td><td>メニュー画面を開く</td><td>3つのメニューが表示される</td></tr>
+          <tr><td><div class="cmd-cell"><code class="cmd-code">nmtui edit</code><button class="cmd-copy">copy</button></div></td><td>接続設定の編集画面を直接開く</td><td>IP / DNS / Gateway の変更</td></tr>
+          <tr><td><div class="cmd-cell"><code class="cmd-code">nmtui connect</code><button class="cmd-copy">copy</button></div></td><td>接続の有効化・無効化画面を開く</td><td>NIC の on/off 切り替え</td></tr>
+          <tr><td><div class="cmd-cell"><code class="cmd-code">nmtui hostname</code><button class="cmd-copy">copy</button></div></td><td>ホスト名の変更画面を開く</td><td>再起動なしで即時反映</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:4px;">
+        操作方法：<strong>↑↓</strong> で項目移動 → <strong>Tab</strong> で次のフィールドへ → <strong>Enter</strong> で決定 → <strong>Esc</strong> でキャンセル・戻る
+      </p>
+    </div>
+
+    <!-- ===== System Info ===== -->
+    <h2 id="system">🔍 System Info</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">cat /etc/os-release</code><button class="cmd-copy">copy</button></div></td><td>OS バージョン確認</td><td>AlmaLinux のバージョンを確認</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">uname -r</code><button class="cmd-copy">copy</button></div></td><td>カーネルバージョン</td><td>-a でフル情報</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">hostnamectl</code><button class="cmd-copy">copy</button></div></td><td>ホスト名・OS 情報</td><td>set-hostname で変更可</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">uptime</code><button class="cmd-copy">copy</button></div></td><td>稼働時間・負荷確認</td><td>load average の目安はコア数以下が正常</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">lscpu</code><button class="cmd-copy">copy</button></div></td><td>CPU 情報（コア数・型番）</td><td>nproc でコア数だけ表示</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">free -h</code><button class="cmd-copy">copy</button></div></td><td>メモリ使用量</td><td>-h で人が読みやすい単位</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">timedatectl</code><button class="cmd-copy">copy</button></div></td><td>日時・タイムゾーン確認</td><td>set-timezone Asia/Tokyo で変更</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Process ===== -->
+    <h2 id="process">⚙️ Process</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ps aux --sort=-%cpu | head -20</code><button class="cmd-copy">copy</button></div></td><td>CPU 使用率 TOP20</td><td>--sort=-%mem でメモリ順</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">pgrep -la nginx</code><button class="cmd-copy">copy</button></div></td><td>プロセス名で検索</td><td>PID と名前を表示</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">kill -9 PID</code><button class="cmd-copy">copy</button></div></td><td>プロセス強制終了</td><td>pkill -f 名前 でも可</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">top -d 2</code><button class="cmd-copy">copy</button></div></td><td>リアルタイム監視</td><td>htop が見やすい（dnf install -y htop）</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Network ===== -->
+    <h2 id="network">🌐 Network</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ip a</code><button class="cmd-copy">copy</button></div></td><td>IPアドレス一覧</td><td>ip -br a でコンパクト表示</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ip route show default</code><button class="cmd-copy">copy</button></div></td><td>デフォルトGW確認</td><td>ip route で全ルート表示</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ss -tlnp</code><button class="cmd-copy">copy</button></div></td><td>LISTEN 中のポート確認</td><td>旧 netstat の代替コマンド</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ping -c 4 8.8.8.8</code><button class="cmd-copy">copy</button></div></td><td>疎通確認</td><td>traceroute でルート確認</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">dig example.com</code><button class="cmd-copy">copy</button></div></td><td>DNS 名前解決確認</td><td>@8.8.8.8 で DNS サーバー指定</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">firewall-cmd --list-all</code><button class="cmd-copy">copy</button></div></td><td>FW 設定確認</td><td>--add-port=8080/tcp --permanent で追加</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">tcpdump -i eth0 port 22 -n</code><button class="cmd-copy">copy</button></div></td><td>パケットキャプチャ</td><td>-w /tmp/cap.pcap でファイル保存</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Disk ===== -->
+    <h2 id="disk">💾 Disk / Storage</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">df -hT | grep -v tmpfs</code><button class="cmd-copy">copy</button></div></td><td>ディスク使用量確認</td><td>T でファイルシステム種別も表示</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">du -sh /* 2>/dev/null | sort -rh | head -10</code><button class="cmd-copy">copy</button></div></td><td>容量の大きいディレクトリ TOP10</td><td>容量逼迫時の調査に便利</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">lsblk</code><button class="cmd-copy">copy</button></div></td><td>ブロックデバイス一覧</td><td>ディスクとパーティション構成を確認</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">iostat -xz 1 5</code><button class="cmd-copy">copy</button></div></td><td>ディスク I/O 確認</td><td>1秒間隔×5回 (sysstat が必要)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Log ===== -->
+    <h2 id="log">📋 Log / Search</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">journalctl -xe</code><button class="cmd-copy">copy</button></div></td><td>systemd ログ（エラー中心）</td><td>-u サービス名 で絞り込み</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">journalctl -u radiusd -f</code><button class="cmd-copy">copy</button></div></td><td>特定サービスをリアルタイム監視</td><td>-f で tail -f 相当</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">journalctl -p err -b</code><button class="cmd-copy">copy</button></div></td><td>今回起動のエラーだけ表示</td><td>-b 0 で今回起動分</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">tail -f /var/log/messages</code><button class="cmd-copy">copy</button></div></td><td>ログのリアルタイム監視</td><td>| grep failed で絞り込み可</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">grep -A 3 -B 3 "ERROR" /var/log/messages</code><button class="cmd-copy">copy</button></div></td><td>エラー前後 3 行も表示</td><td>-A: 後ろ行 / -B: 前の行</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">grep -rn "keyword" /etc/</code><button class="cmd-copy">copy</button></div></td><td>設定ファイル内を再帰検索</td><td>-n で行番号も表示</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">find /etc -name "*.conf" -mtime -1</code><button class="cmd-copy">copy</button></div></td><td>直近 1 日に変更された設定ファイル</td><td>-mmin -60 で 60 分以内</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Service ===== -->
+    <h2 id="service">🔧 Service（systemd）</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">systemctl start SERVICE</code><button class="cmd-copy">copy</button></div></td><td>サービス起動</td><td>stop / restart / reload も同様</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">systemctl enable --now SERVICE</code><button class="cmd-copy">copy</button></div></td><td>自動起動 ON + 即時起動</td><td>--now を付けると今すぐ起動も兼ねる</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">systemctl status SERVICE --no-pager</code><button class="cmd-copy">copy</button></div></td><td>サービス状態確認</td><td>--no-pager で画面に全部出す</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">systemctl list-units --type=service --state=failed</code><button class="cmd-copy">copy</button></div></td><td>失敗しているサービス一覧</td><td>トラブル調査の最初に確認</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== File Ops ===== -->
+    <h2 id="file">📁 File Ops</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">tar czf backup.tar.gz /target/</code><button class="cmd-copy">copy</button></div></td><td>圧縮アーカイブ作成</td><td>xzf で解凍 / tzf で中身確認</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">scp file.txt user@192.168.1.10:/tmp/</code><button class="cmd-copy">copy</button></div></td><td>ファイル転送（SCP）</td><td>逆順でリモート→ローカルも可</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">rsync -avz /src/ user@host:/dest/</code><button class="cmd-copy">copy</button></div></td><td>差分同期（rsync）</td><td>-n で dry-run（実際は転送しない）</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">diff -u old.conf new.conf</code><button class="cmd-copy">copy</button></div></td><td>ファイルの差分確認</td><td>設定変更前後の比較に</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">sed -i.bak 's/old/new/g' file.conf</code><button class="cmd-copy">copy</button></div></td><td>ファイル内の文字列を一括置換</td><td>.bak でバックアップ自動作成</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== User ===== -->
+    <h2 id="user">👤 User / Permission</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">useradd -m -s /bin/bash USERNAME</code><button class="cmd-copy">copy</button></div></td><td>ユーザー作成</td><td>-m でホームディレクトリ作成</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">usermod -aG wheel USERNAME</code><button class="cmd-copy">copy</button></div></td><td>sudo グループに追加</td><td>-aG で既存グループを保持しつつ追加</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">chmod 644 file / chmod 750 script.sh</code><button class="cmd-copy">copy</button></div></td><td>パーミッション変更</td><td>644=rw-r--r-- / 750=rwxr-x---</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">chown -R user:group /path/</code><button class="cmd-copy">copy</button></div></td><td>所有者を再帰的に変更</td><td>-R でディレクトリ以下すべて</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">id && sudo -l</code><button class="cmd-copy">copy</button></div></td><td>自分のユーザー情報・sudo 権限確認</td><td>whoami でユーザー名だけ表示</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Performance ===== -->
+    <h2 id="performance">📈 Performance</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">vmstat 1 10</code><button class="cmd-copy">copy</button></div></td><td>CPU / メモリ / I/O の統合確認</td><td>r:実行待ち si/so:スワップ bi/bo:ディスクI/O</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">sar -u 1 5</code><button class="cmd-copy">copy</button></div></td><td>CPU 使用率の推移</td><td>-r メモリ / -n DEV ネットワーク (sysstat 必要)</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ss -s</code><button class="cmd-copy">copy</button></div></td><td>TCP 接続状況サマリー</td><td>ss -tnp state ESTABLISHED で接続一覧</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ===== Tips ===== -->
+    <h2 id="tips">💡 便利 Tips</h2>
+    <table class="cmd-table">
+      <thead><tr><th>コマンド / 設定</th><th>用途</th><th>補足</th></tr></thead>
+      <tbody>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">history | grep dnf</code><button class="cmd-copy">copy</button></div></td><td>コマンド履歴の絞り込み</td><td>!123 で番号指定再実行 / !! で直前を再実行</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">grep -v "^#\|^$" /etc/sample.conf</code><button class="cmd-copy">copy</button></div></td><td>コメント行・空行を除いて表示</td><td>設定ファイル確認の定番ワンライナー</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">find / -type f -printf '%s %p\n' 2>/dev/null | sort -rn | head -10</code><button class="cmd-copy">copy</button></div></td><td>ディスク上の大きいファイル TOP10</td><td>容量調査に有効</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">screen -S mysession</code><button class="cmd-copy">copy</button></div></td><td>セッション維持（切断されても作業継続）</td><td>Ctrl+a d で切り離し / screen -r で再接続</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">tmux new -s work</code><button class="cmd-copy">copy</button></div></td><td>tmux でセッション管理</td><td>Ctrl+b d で切り離し / tmux attach -t work で再接続</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">ssh-keygen -t ed25519 -C "mykey"</code><button class="cmd-copy">copy</button></div></td><td>SSH 鍵ペア生成</td><td>ssh-copy-id user@host で公開鍵を転送</td></tr>
+        <tr><td><div class="cmd-cell"><code class="cmd-code">curl -o /dev/null -s -w "%{http_code}\n" http://example.com</code><button class="cmd-copy">copy</button></div></td><td>HTTP ステータスコード確認</td><td>-I でヘッダーのみ / -v で詳細表示</td></tr>
+      </tbody>
+    </table>
+
+    <div class="page-nav">
+      <a href="08_ansible.html">← 08. Ansible</a>
+      <a href="kb_myinfo.html">Knowledge Box: My Info →</a>
+    </div>
+  </main>
+</div>
+<script>
+document.querySelectorAll('.acc-toggle').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const body=btn.nextElementSibling;
+    const isOpen=btn.classList.contains('open');
+    document.querySelectorAll('.acc-toggle').forEach(b=>{
+      b.classList.remove('open');
+      if(b.nextElementSibling) b.nextElementSibling.classList.remove('open');
+    });
+    if(!isOpen){btn.classList.add('open');body.classList.add('open');}
+  });
+});
+const active=document.querySelector('.acc-body a.active');
+if(active){
+  const body=active.closest('.acc-body');
+  if(body){body.classList.add('open');body.previousElementSibling.classList.add('open');}
+}
+// コマンドコピーボタン
+document.querySelectorAll('.cmd-copy').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const code=btn.closest('.cmd-cell').querySelector('.cmd-code');
+    navigator.clipboard.writeText(code.innerText).then(()=>{
+      btn.textContent='copied!';btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent='copy';btn.classList.remove('copied');},1500);
+    });
+  });
+});
+</script>
+</body></html>
